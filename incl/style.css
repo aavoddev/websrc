@@ -1,0 +1,241 @@
+body {
+	-webkit-text-size-adjust: 100%;
+	color: #657b83;
+	background-color: #fdf6e3;
+	margin: 0;
+	font-family: Helvetica, Verdana, Arial, 'Liberation Sans', FreeSans, sans-serif;
+	font-size: 95%;
+}
+
+.noflash {
+	-webkit-tap-highlight-color: transparent;
+}
+
+code {
+	font: 10pt courier, 'courier new', monospace;
+	padding: .08em .2em;
+	background-color: #eee8d5;
+}
+
+pre {
+	tab-size: 4;
+	font: 10pt courier, 'courier new', monospace;
+	background-color: #eee8d5;
+	padding: .6em;
+	overflow: auto;
+}
+
+pre code {
+	padding: 0;
+}
+
+a, a:visited {
+	color: #859900;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+p {
+	max-width: 50em;
+}
+
+.nocss {
+	display: none;
+}
+
+#menuctl {
+	display: none;
+}
+
+#header {
+	position: relative;
+	background-color: #eee8d5;
+}
+
+#htable {
+	display: table;
+	height: 3em;
+}
+
+#htable .title {
+	display: table-cell;
+	vertical-align: middle;
+	padding-left: .6em;
+}
+
+#htable .title a {
+	color: inherit;
+	text-decoration: none;
+	font-weight: normal;
+}
+
+#menubutton {
+	display: none;
+}
+
+#ccontainer {
+	margin-left: 12em; /* menusize */
+}
+
+#content {
+	margin: 1.2em; /* cmargin */
+	margin-top: 0;
+	padding-top: .1px;
+	max-width: 54em;
+}
+
+/* #content *:first-child {
+	margin-top: 0;
+} */
+
+li ul {
+	padding-left: 0.6em !important;
+}
+
+#sidebar.menu {
+	float: left;
+	clear: left;
+	width: 12em; /* menusize */
+	padding-top: .2em;
+}
+
+#sidebar.menu #sitemap {
+	margin-top: 1.3em;
+}
+
+.menu ul {
+	list-style-type: none;
+	list-style-position: outside;
+	margin: 0;
+	padding: 0 0 0.3em 0;
+}
+
+.menu li {
+	margin: 0;
+	padding: 0.1ex 0;
+}
+
+.menu a {
+	display: block;
+	padding: .25em .5em .25em .5em;
+	border-left: transparent solid .2em;
+}
+
+.menu a:hover {
+	border-left: #586e75 solid .2em;
+}
+
+/*** DESKTOP ***/
+
+#sidebar.menu #home {
+	display: none;
+}
+
+/*** MOBILE ***/
+
+@media (max-width: 60em) {
+
+#sidebar.menu #home {
+	font-size: 110%;
+	font-weight: bold;
+	padding: .4em .5em;
+	margin-bottom: .2em;
+}
+
+#menubutton {
+	display: table-cell;
+	vertical-align: middle;
+	padding-left: .8em;
+	padding-right: .8em;
+}
+
+#menubutton #menuimg {
+	display: block;
+	box-sizing: border-box;
+	width: 1.3em;	/* This is just eyeballed. */
+	height: 1em;
+	background: url(/static/img/menu.svg) no-repeat;
+	background-size: contain;
+	background-position: center;
+}
+
+#htable .title {
+	padding-left: .1em;
+}
+
+#sidebar.menu {
+	z-index: 1;
+}
+
+#sidebar.menu #home {
+	display: block;
+}
+
+body,
+html {
+	overflow-x: hidden;
+}
+
+#bottom {
+	transform: translate(-12em, 0);
+}
+
+#ccontainer {
+	width: 100%;
+}
+
+.sbtrans {
+	transition-duration: 0.25s;
+}
+
+/* Open, close */
+
+#header #menubutton,
+.sbtransmov {
+	transition-property: transform;
+}
+
+#menuctl:checked ~ * #menubutton {
+	transform: rotate(90deg);
+}
+
+#menuctl:checked ~ * #htable {
+	transform: translate(12em, 0);
+}
+
+#menuctl:checked ~ #bottom {
+	transform: translate(0, 0);
+}
+
+/* Fade content */
+
+.sbtransfade {
+	transition-property: opacity;
+}
+
+#menuctl:checked ~ * .sbtransfade {
+	opacity: .25;
+	z-index: -1;
+}
+
+/* click shield */
+
+.shieldctl {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	z-index: 1;
+	display: none;
+}
+
+#menuctl:checked ~ * .shieldctl {
+	display: initial;
+}
+
+}
