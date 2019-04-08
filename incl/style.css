@@ -22,7 +22,6 @@ pre {
 	font: 10pt courier, 'courier new', monospace;
 	background-color: #eee8d5;
 	padding: .6em;
-	max-height: 60%;
 	overflow: auto;
 }
 
