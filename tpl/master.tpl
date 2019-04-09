@@ -61,6 +61,7 @@
 				<a href="/sitemap" id="sitemap">{{if Issm .Sidebar.Cur.N}}» {{else}}› {{end}}Site Map</a>
 			</div>
 			<div id="ccontainer" class="sbtrans sbtransfade">
+				<label id="ts" class="shieldctl noflash" for="menuctl"></label>
 				<label class="shieldctl noflash" for="menuctl"></label>
 				<div id="content">
 					{{.Content}}

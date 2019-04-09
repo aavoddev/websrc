@@ -60,7 +60,7 @@ p {
 
 #htable {
 	display: table;
-	height: 3em;
+	height: 3em; /* headheight */
 }
 
 #htable .title {
@@ -232,6 +232,13 @@ html {
 	width: 100%;
 	z-index: 1;
 	display: none;
+}
+
+#bottom #ts.shieldctl {
+	position: absolute;
+	height: 100vh;
+	width: 100%;
+	top: -3em; /* headheight */
 }
 
 #menuctl:checked ~ * .shieldctl {

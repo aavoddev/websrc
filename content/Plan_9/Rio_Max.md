@@ -1,7 +1,7 @@
 Maximize script & Rio patch
 ===========================
 
-The rio(4) manual is phrased in a way to imply that the `wctl` `move` command can take `-maxx` and `-maxy` options, but unfortunately the implementation disagrees. If the implementation matched the docs, aligning windows to the right or bottom edge of the screen would be very simple, so let's take a look at what needs to be fixed. References to code won't use line numbers as Plan 9 is a moving target in the case of the 9front fork.
+The rio(4) manual is phrased in a way to imply that the `wctl` `move` command can take `-maxx` and `-maxy` options, but unfortunately the implementation disagrees. If the implementation matched the docs, aligning windows to the right or bottom edge of the screen would be very simple, so let's take a look at what needs to be fixed. References to code won't use line numbers as Plan 9 is potentially a moving target in the case of the 9front fork.
 
 The area we're interested in is located in `wctl.c`.
 
@@ -65,7 +65,7 @@ wctlcmd(Window *w, Rectangle r, int cmd, char *err)
 	case Resize:
 ```
 
-My solution is a little clunkier than I'd like, but it works and it's clear exactly what it does. First order of business is the new variable, `rd` of type `Rectangle`. Despite its type, `rd` does not represent a rectangle to be drawn, it represents whether the corresponding values of `r` and `w->screenr` differ. A check is performed to make sure the `min` and `max` values of the same axis haven't both changed, if they have, it returns an error to the calling function.
+My solution is a little clunkier than I'd like, but it works well enough and it's clear exactly what it does. It will mis-handle a move outside rio's bounds, potentially succeeding incorrectly, or mis-reporting the error `max and min are mutually exclusive`, but the solution would be more work than it's worth. First order of business is the new variable, `rd` of type `Rectangle`. Despite its type, `rd` does not represent a rectangle to be drawn, it represents whether the corresponding values of `r` and `w->screenr` differ. A check is performed to make sure the `min` and `max` values of the same axis haven't both changed, if they have, it returns an error to the calling function.
 
 Then, it's just a matter of deciding which value to throw away and which to keep, much like in the original code, but this time, it can throw away either the `min` or `max`.
 
@@ -75,17 +75,21 @@ What this affords us
 
 I noticed this bug when I was making a script to maximize windows and it didn't behave correctly, so fixing this allows my script to work.
 
-The script's name is simply `max` on my system. `max`, as seen in Fig 5, will maximize and move the window to the limits defined by the variable `rmargin`, which is expected to be defined in the user's `$home/lib/profile`. An example definition is as shown in Fig 4. This definition leaves a 161-pixel gap at the left, and a 1-pixel gap at the bottom and right side of the screen. So I have a stats(8), clock date(1), and winwatch(1) windows setup by riostart in the left margin, and that never changes. The 1-pixel margin around the bottom and right of the screen is for right-clicking to access the rio menu, which is sometimes handy.
+The script's name is simply `max` on my system. `max`, as seen in Fig 6, will maximize and move the window to the limits defined by the variable `rmargin`, which is expected to be defined prior to the execution of `max`. An example definition is as shown in Fig 4. This definition leaves a 161-pixel gap at the left, and a 1-pixel gap at the bottom and right side of the screen. So I have a stats(8), clock date(1), and winwatch(1) windows setup by riostart in the left margin, and that never changes. The 1-pixel margin around the bottom and right of the screen is for right-clicking to access the rio menu, which is sometimes handy.
 
-Running `max` with no arguments will make the window as large as it can be while maintaining the margins. The flags `-l`, `-r`, `-u`, and `-d` bump the window up next to the leftmost, rightmost, uppermost, and lowermost limts, respectively. The `-v` and `-h` flags maximize the window vertically and horizontally, respectively. Running `max` with no arguments is the same as running `max -vh`.
+In addition to `rmargin`, there's `sriomargin` which is for use if a sub-rio is spawned. For normal rio, the values should be as depicted in Fig 5.
 
-The script itself is mostly self-explanatory. The section that contains the most magic is the definition of the `scr` variable, which invokes dd(1). The fields of `/dev/draw/new` ony my system are shown in Fig 3. The reason we have to use dd(1) to extract the fields is because the draw device get mad at us if we read more than once: `unknown id for draw image`, hence the `-count 1` arguments. As such, cat(1), which reads indefinitely, is out of the question for this application.
+Running `max` with no arguments will make the window as large as it can be while maintaining the margins. The flags `-l`, `-r`, `-u`, and `-d` bump the window up next to the leftmost, rightmost, uppermost, and lowermost limits, respectively. The `-v` and `-h` flags maximize the window vertically and horizontally, respectively. Running `max` with no arguments is the same as running `max -vh`.
 
-We set the `ifs` to a single space to separate out the fields produced by dd(1). The fields we're interested in are the 7th and 8th, which, as described in draw(3), are `max.x, and max.y of the display image`. So we subract our `maxx` and `maxy` margins from the values we got from `/dev/draw/new` to get the maximum limits. We do this by composing commands for bc(1) with echo and piping to `bc` and assigning the output to the variables `maxx` and `maxy` as rc(1) doesn't have builtin math facilities.
+The script itself is mostly self-explanatory. The section that contains the most magic is the definition of the `scr` variable, which invokes dd(1) on either `/dev/screen` if we're not running in a sub-rio, or `/mnt/orio/window` if we are. The fields of `/dev/screen` on my system are shown in Fig 3. It is imperative that we read only once and only the first 60 bytes, as we're reading the header of a larger image(6) file. It seems rio will only return the first 60 bytes even if your buffer is larger on the first read, but we only ask for 60 just to be safe. As such, cat(1), which reads indefinitely, is out of the question for this application.
+
+We set the `ifs` to a single space to separate out the fields produced by dd(1). The fields we're interested in are the 7th and 8th, which, as described in draw(3), are `max.x, and max.y of the display image`. So we subtract our `maxx` and `maxy` margins from the values we got from `/dev/draw/new` to get the maximum limits. We do this by composing commands for bc(1) with echo and piping to `bc` and assigning the output to the variables `maxx` and `maxy` as rc(1) doesn't have builtin math facilities.
+
+The reason we have a special case for sub-rios is because otherwise we would have no idea what size the rio we're running in is, and we would be passing errant values to rio. Both `/mnt/orio` and `sriomargin` come from the script I use for creating sub-rios conveniently, shown in Fig 7, so `/mnt/orio`, if it exists, will always be the parent rio, not the rio we're currently operating in.
 
 Fig 3.
 ```
-         51           0    x8r8g8b8           0           0           0        1600         900           0           0        1600         900 
+   x8r8g8b8           0           0        1600         900 
 ```
 
 Fig 4.
@@ -95,10 +99,17 @@ rmargin=(161 0 1 1)
 
 Fig 5.
 ```
+sriomargin=(0 0 8 8)
+```
+
+Fig 6.
+```
 #!/bin/rc
 
 rfork e
 
+nl='
+'
 h=0
 v=0
 our=()
@@ -106,17 +117,27 @@ oum=()
 
 argv0=$0
 
-# $rmargin=(minx miny maxx maxy)
-# Margins
+if(~ $#rmargin 0)
+	rmargin=(0 0 0 0)
+if(~ $#sriomargin 0)
+	sriomargin=(0 0 0 0)
+
+if(test -r /mnt/orio/window)
+	ressrc='/mnt/orio/window'
+if not
+	ressrc='/dev/screen'
+ifs=' ' scr=`{dd -if $ressrc -bs 60 -count 1 -quiet 1}
+if(test $#scr -lt 5){
+	echo 'failed to read resolution'
+	exit 1
+}
+res=($scr(2) $scr(3) $scr(4) $scr(5))
 minx=$rmargin(1)
 miny=$rmargin(2)
-maxx=$rmargin(3)
-maxy=$rmargin(4)
-
-
-ifs=' ' scr=`{dd -if /dev/draw/new -bs 200 -count 1 -quiet 1}
-maxx=`{echo $scr(7) - $maxx | bc}
-maxy=`{echo $scr(8) - $maxy | bc}
+# maxx = scr.max.x - scr.min.x - rmarg - rsriomarg
+# maxy = scr.max.y - scr.min.y - bmarg - bsriomarg
+maxx=`{echo $res(3) - $res(1) - $rmargin(3) - $sriomargin(3) | bc | tr -d $nl}
+maxy=`{echo $res(4) - $res(2) - $rmargin(4) - $sriomargin(4) | bc | tr -d $nl}
 
 nopts=$#*
 flagfmt='h,v,l,r,t,b'
@@ -149,5 +170,16 @@ if(! ~ $oum '')
 	echo move $"oum >>/dev/wctl
 ```
 
+Fig 7.
+```
+#!/bin/rc
 
+max
 
+rfork e
+bind /mnt/wsys /mnt/orio
+rmargin=(20 0 0 0)
+sriomargin=(0 0 8 8)
+rio
+
+```
