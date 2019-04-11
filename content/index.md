@@ -1,3 +1,3 @@
 This is my personal site.
 
-A lot of pages may be more hand-hold-y than is necessary, but they serve to document my process for problem solving that perhaps someone less experienced could benefit from; they're formatted in a way that I believe would have helped my past self. Anyone more experienced will probably find them to be boring at best, so be warned. Their usefulness is yet to be determined.
+Many pages may be describing things that are obvious or trivial to do, but the idea is to be in the habit of documenting what I find trivial now, so when my trivial becomes someone else's not-trivial, it'll be useful. Their usefulness is yet to be determined.

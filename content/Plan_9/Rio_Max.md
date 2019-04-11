@@ -83,7 +83,7 @@ Running `max` with no arguments will make the window as large as it can be while
 
 The script itself is mostly self-explanatory. The section that contains the most magic is the definition of the `scr` variable, which invokes dd(1) on either `/dev/screen` if we're not running in a sub-rio, or `/mnt/orio/window` if we are. The fields of `/dev/screen` on my system are shown in Fig 3. It is imperative that we read only once and only the first 60 bytes, as we're reading the header of a larger image(6) file. It seems rio will only return the first 60 bytes even if your buffer is larger on the first read, but we only ask for 60 just to be safe. As such, cat(1), which reads indefinitely, is out of the question for this application.
 
-We set the `ifs` to a single space to separate out the fields produced by dd(1). The fields we're interested in are the 7th and 8th, which, as described in draw(3), are `max.x, and max.y of the display image`. So we subtract our `maxx` and `maxy` margins from the values we got from `/dev/draw/new` to get the maximum limits. We do this by composing commands for bc(1) with echo and piping to `bc` and assigning the output to the variables `maxx` and `maxy` as rc(1) doesn't have builtin math facilities.
+We set the `ifs` to a single space to separate out the fields produced by dd(1). The fields we're interested in are fields 2-5, which, as described in draw(3), are `r.min.x, r.min.y, r.max.x, and r.max.y`. So we subtract our `maxx` and `maxy` margins from the values we got from `/dev/draw/new` to get the maximum limits. We do this by composing commands for bc(1) with echo and piping to `bc` and assigning the output to the variables `maxx` and `maxy` as rc(1) doesn't have builtin math facilities.
 
 The reason we have a special case for sub-rios is because otherwise we would have no idea what size the rio we're running in is, and we would be passing errant values to rio. Both `/mnt/orio` and `sriomargin` come from the script I use for creating sub-rios conveniently, shown in Fig 7, so `/mnt/orio`, if it exists, will always be the parent rio, not the rio we're currently operating in.
 
@@ -181,5 +181,4 @@ bind /mnt/wsys /mnt/orio
 rmargin=(20 0 0 0)
 sriomargin=(0 0 8 8)
 rio
-
 ```
